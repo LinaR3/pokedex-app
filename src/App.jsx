@@ -1,13 +1,14 @@
 import React from 'react'
-import GameBoyShell from './components/GameBoyShell'
-import { usePokemon } from './hooks/usePokemon'
+import { StoreProvider } from './store/StoreContext'
+import GameBoy from './components/GameBoy'
+import './styles/gameboy.css'
 
 export default function App() {
-  const pokemonState = usePokemon()
-
   return (
-    <div className="app-bg">
-      <GameBoyShell {...pokemonState} />
-    </div>
+    <StoreProvider>
+      <div className="app-bg">
+        <GameBoy />
+      </div>
+    </StoreProvider>
   )
 }
