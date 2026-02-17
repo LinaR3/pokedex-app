@@ -155,30 +155,11 @@ Todo el CSS del diseño. Incluye:
 - [ ] Agregar Gen 2, 3, etc.
 - [ ] Modo batalla simulado
 
----
-
-## 🐛 PROBLEMAS COMUNES
-
-**"command not found: npm"**
-→ Instala Node.js desde nodejs.org
-
-**"Cannot find module"**
-→ Verifica que la estructura de carpetas sea exacta
-
-**Pokémon no carga / red error**
-→ La PokéAPI es gratuita pero tiene límites. Espera unos segundos y recarga.
-
----
-
 ## 📚 API USADA
 
-**PokéAPI** - https://pokeapi.co (GRATIS, sin API key)
+**PokéAPI** - https://pokeapi.co 
 
 Endpoints:
 - `GET /api/v2/pokemon?limit=151` → Lista Gen 1
 - `GET /api/v2/pokemon/{id}` → Detalles del Pokémon
 - `GET /api/v2/pokemon-species/{id}` → Texto descriptivo
-
----
-
-¡Gotta catch 'em all! 🎮⚡

@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    RESET
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -20,9 +20,9 @@
 
 body { background: #040b1a; }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PAGE
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .app-bg {
   min-height: 100vh;
   background: radial-gradient(ellipse at 50% 20%, #0d2050 0%, #040b1a 75%);
@@ -30,11 +30,11 @@ body { background: #040b1a; }
   padding: 24px 12px;
 }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SHELL
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .shell {
-  width: 540px;
+  width: 750px;
   max-width: 100%;
   border-radius: 20px 20px 44px 44px;
   background: linear-gradient(155deg, #1d3b8a 0%, #162d6b 40%, #0b1736 100%);
@@ -51,9 +51,9 @@ body { background: #040b1a; }
   to   { opacity:1; transform:scale(1)  translateY(0); }
 }
 
-/* ══════════════════════════════════
-   TOP DECO (1 pokéball + AZUL)
-══════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   TOP DECO (1 pokÃ©ball + AZUL)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .top-deco {
   display: flex;
   align-items: center;
@@ -70,7 +70,7 @@ body { background: #040b1a; }
   background: linear-gradient(90deg, rgba(96,165,250,.4), transparent);
 }
 
-/* Pokéballs decoration (top - 1 each side) */
+/* PokÃ©balls decoration (top - 1 each side) */
 .top-pokeball {
   width: 32px; height: 32px;
   border-radius: 50%;
@@ -87,7 +87,7 @@ body { background: #040b1a; }
 
 @keyframes ball-bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
 
-/* Small pokéballs bottom row */
+/* Small pokÃ©balls bottom row */
 .bot-pokeball-row {
   display: flex;
   justify-content: space-around;
@@ -117,9 +117,9 @@ body { background: #040b1a; }
   50%     { text-shadow:0 0 22px var(--glow),0 0 44px var(--glow); }
 }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SCREEN ZONE
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .screen-zone {
   display: flex;
   align-items: stretch;
@@ -160,9 +160,9 @@ body { background: #040b1a; }
 .ab-btn:hover  { filter: brightness(1.2); }
 .ab-btn:active { transform: translateY(4px); }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SCREEN
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .screen-outer {
   flex: 1;
   background: #050e22;
@@ -172,7 +172,7 @@ body { background: #040b1a; }
 }
 .screen-inner {
   border-radius: 8px; overflow: hidden;
-  position: relative; min-height: 236px;
+  position: relative; min-height: 280px;
   background: linear-gradient(135deg, var(--scr-lt) 0%, #8bac0f 70%, #306230 100%);
 }
 .scanlines {
@@ -180,9 +180,9 @@ body { background: #040b1a; }
   background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);
 }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SCREEN STATES
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .sc {
   position: absolute; inset: 0;
   display: flex; flex-direction: column;
@@ -234,9 +234,9 @@ body { background: #040b1a; }
 .fav-item-del   { margin-left:auto; background:none; border:none; cursor:pointer; color:rgba(255,255,255,.3); font-size:12px; }
 .fav-item-del:hover { color:var(--red); }
 
-/* ══════════════════════════════════
-   POKÉMON SCREEN
-══════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   POKÃ‰MON SCREEN
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .sc-poke { background:linear-gradient(135deg, var(--scr-lt) 0%,#8bac0f 70%,#306230 100%); gap:8px; }
 
 .pk-header {
@@ -265,7 +265,7 @@ body { background: #040b1a; }
 .pk-body   { display:flex; gap:10px; align-items:center; flex:1; }
 .pk-left   { display:flex; flex-direction:column; align-items:center; gap:4px; }
 .pk-sprite {
-  width:90px; height:90px; image-rendering:pixelated;
+  width:110px; height:110px; image-rendering:pixelated;
   filter:drop-shadow(2px 4px 8px rgba(0,0,0,.3));
 }
 .pk-genus  { font-family:var(--font); font-size:6px; color:var(--scr-dk); text-align:center; }
@@ -285,9 +285,9 @@ body { background: #040b1a; }
 }
 .pk-flavor p { font-family:var(--font); font-size:6.5px; color:var(--scr-dk); line-height:1.9; }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PERSONAJES (species) SCREEN
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .sc-species { background:linear-gradient(135deg, var(--scr-lt) 0%,#8bac0f 70%,#306230 100%); gap:8px; }
 
 .sp-header {
@@ -299,7 +299,7 @@ body { background: #040b1a; }
 
 .sp-body   { display:flex; gap:10px; align-items:center; flex:1; }
 .sp-artwork {
-  width:90px; height:90px; image-rendering:pixelated;
+  width:110px; height:110px; image-rendering:pixelated;
   filter:drop-shadow(2px 4px 8px rgba(0,0,0,.3));
 }
 .sp-details { flex:1; display:flex; flex-direction:column; gap:7px; }
@@ -317,9 +317,9 @@ body { background: #040b1a; }
 .sp-flavor { background:rgba(0,0,0,.12); border-radius:5px; padding:6px 8px; }
 .sp-flavor p { font-family:var(--font); font-size:6.5px; color:var(--scr-dk); line-height:1.9; }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    TIPOS SCREEN
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .sc-type { background:linear-gradient(135deg, var(--scr-lt) 0%,#8bac0f 70%,#306230 100%); gap:8px; }
 
 .tp-header {
@@ -337,9 +337,9 @@ body { background: #040b1a; }
 .tp-rel-lbl { font-family:var(--font); font-size:7px; min-width:100px; line-height:1.6; }
 .tp-rel-pills { display:flex; gap:3px; flex-wrap:wrap; }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    VERSIONES SCREEN
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .sc-version { background:linear-gradient(135deg, var(--scr-lt) 0%,#8bac0f 70%,#306230 100%); gap:10px; }
 
 .vr-header {
@@ -352,18 +352,18 @@ body { background: #040b1a; }
 .vr-body  { flex:1; padding:8px; }
 .vr-desc  { font-family:var(--font); font-size:8px; color:var(--scr-dk); line-height:2; }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ANIMATIONS
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .anim-bounce { animation:bounce-in .5s cubic-bezier(.175,.885,.32,1.275) both; }
 @keyframes bounce-in {
   from { opacity:0; transform:scale(.3) translateY(-20px); }
   to   { opacity:1; transform:scale(1)  translateY(0); }
 }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    BOTTOM HALF
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .bot-half {
   background: linear-gradient(180deg, #162d6b 0%, #0b1736 100%);
   border-radius: 0 0 44px 44px;
@@ -377,13 +377,13 @@ body { background: #040b1a; }
   margin-bottom: 12px;
 }
 
-/* ── D-Pad ── */
+/* â”€â”€ D-Pad â”€â”€ */
 .dpad      { display:flex; flex-direction:column; align-items:center; gap:2px; }
 .dpad-row  { display:flex; justify-content:center; }
 .dpad-mid  { display:flex; align-items:center; gap:2px; }
 
 .dp {
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   background: linear-gradient(145deg,#1d3b8a,#0b1736);
   border: 2px solid #08102a; border-radius: 6px;
   color: rgba(255,255,255,.6); font-size: 12px;
@@ -403,7 +403,7 @@ body { background: #040b1a; }
   border:2px solid #08102a;
 }
 
-/* ── Mini card ── */
+/* â”€â”€ Mini card â”€â”€ */
 .mini-card {
   margin-top:12px;
   background:rgba(0,0,0,.3);
@@ -428,7 +428,7 @@ body { background: #040b1a; }
 .mini-fav.on { color:#ef4444; border-color:#ef4444; box-shadow:0 0 10px rgba(239,68,68,.3); }
 .mini-fav:hover { transform:scale(1.15); }
 
-/* ── Category buttons (4 only) ── */
+/* â”€â”€ Category buttons (4 only) â”€â”€ */
 .cat-row {
   display: grid;
   grid-template-columns: repeat(4,1fr);
@@ -453,9 +453,9 @@ body { background: #040b1a; }
 .cat-emoji { font-size:16px; }
 .cat-label { font-family:var(--font); font-size:6px; color:#fff; line-height:1.3; text-align:center; }
 
-/* ── Item list ── */
+/* â”€â”€ Item list â”€â”€ */
 .item-list {
-  max-height: 148px; overflow-y: auto;
+  max-height: 180px; overflow-y: auto;
   display: flex; flex-direction: column; gap: 4px;
   scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
 }
@@ -483,7 +483,7 @@ body { background: #040b1a; }
 .row-name   { font-family:var(--font); font-size:8px; color:#fff; flex:1; line-height:1.4; }
 .row-fav-dot { font-size:11px; color:#ef4444; }
 
-/* ── Button bar ── */
+/* â”€â”€ Button bar â”€â”€ */
 .btn-bar {
   display: flex; align-items: center; gap: 12px; padding-top: 10px;
 }
@@ -506,13 +506,126 @@ body { background: #040b1a; }
 .speaker { margin-left:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
 .sp-dot  { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.1); box-shadow:inset 0 1px 2px rgba(0,0,0,.6); }
 
-/* ══════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    RESPONSIVE
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @media (max-width:580px) {
   .shell { border-radius:14px 14px 28px 28px; }
   .bot-grid { grid-template-columns:1fr; }
   .bot-left { display:flex; gap:12px; align-items:flex-start; }
   .cat-row  { grid-template-columns:repeat(2,1fr); }
   .sp-grid  { grid-template-columns:repeat(2,1fr); }
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   MEJORA #1: SEARCH BAR
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.search-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(59,130,246,.35);
+  border-radius: 8px;
+  padding: 6px 10px;
+  gap: 8px;
+  min-width: 200px;
+  transition: all .2s;
+}
+
+.search-input-wrap:focus-within {
+  border-color: var(--glow);
+  box-shadow: 0 0 0 2px rgba(96,165,250,.2);
+}
+
+.search-icon {
+  font-size: 14px;
+  opacity: .6;
+}
+
+.search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 8px;
+  padding: 2px 0;
+}
+
+.search-input::placeholder {
+  color: rgba(255,255,255,.3);
+  font-size: 7px;
+}
+
+.search-clear {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.4);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+  transition: color .2s;
+}
+
+.search-clear:hover {
+  color: var(--red);
+}
+
+.search-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.15);
+  border-top-color: var(--glow);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+
+.search-results {
+  font-family: var(--font);
+  font-size: 6px;
+  color: var(--glow);
+  white-space: nowrap;
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   MEJORA #5: RATE LIMITER VISUAL
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.rate-limit-bar {
+  height: 6px;
+  background: rgba(0,0,0,.3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  border: 1px solid rgba(255,255,255,.1);
+  position: relative;
+}
+
+.rate-limit-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e 0%, #3b82f6 70%, var(--glow) 100%);
+  transition: width .3s ease;
+  border-radius: 3px;
+}
+
+.rate-limit-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }

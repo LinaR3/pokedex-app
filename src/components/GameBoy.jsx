@@ -1,11 +1,16 @@
-import React, { useEffect, useCallback, useRef } from 'react'
+import React, { useEffect, useCallback, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext'
-import { fetchList, fetchDetail, CATEGORIES, getPokemonSprite } from '../api/index'
+import { fetchList, fetchDetail, searchInList, prefetchNext, CATEGORIES, getPokemonSprite, rateLimiter } from '../api/index'
 import TopScreen from './TopScreen'
+import SearchBar from './SearchBar'
 
 export default function GameBoy() {
   const { state, dispatch } = useStore()
   const { category, categoryIndex, list, selected, listLoading, view, favorites } = state
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredList, setFilteredList] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
 
   const activeRef = useRef(null)
 
@@ -16,15 +21,27 @@ export default function GameBoy() {
       try {
         dispatch({ type: 'LIST_LOADING' })
         const items = await fetchList(category)
-        if (!dead) dispatch({ type: 'SET_LIST', payload: items })
+        rateLimiter.addRequest()
+        if (!dead) {
+          dispatch({ type: 'SET_LIST', payload: items })
+          setFilteredList(items)
+        }
       } catch (e) {
         if (!dead) dispatch({ type: 'SET_ERROR', payload: e.message })
       }
     })()
     return () => { dead = true }
-  }, [category])
+  }, [category, dispatch])
 
-  /* ── Load detail when selected changes ── */
+  /* ── MEJORA #1: Búsqueda con debounce ── */
+  useEffect(() => {
+    setIsSearching(true)
+    const filtered = searchInList(list, searchQuery)
+    setFilteredList(filtered)
+    setIsSearching(false)
+  }, [searchQuery, list])
+
+  /* ── Load detail when selected changes + MEJORA #3: Prefetch ── */
   useEffect(() => {
     if (!selected) return
     let dead = false
@@ -32,13 +49,19 @@ export default function GameBoy() {
       try {
         dispatch({ type: 'DETAIL_LOADING' })
         const data = await fetchDetail(category, selected.id)
-        if (!dead) dispatch({ type: 'SET_DETAIL', payload: data })
+        rateLimiter.addRequest()
+        if (!dead) {
+          dispatch({ type: 'SET_DETAIL', payload: data })
+          
+          // MEJORA #3: Prefetch siguiente item en background
+          prefetchNext(category, list, selected.id)
+        }
       } catch (e) {
         if (!dead) dispatch({ type: 'SET_ERROR', payload: e.message })
       }
     })()
     return () => { dead = true }
-  }, [selected?.id, category])
+  }, [selected?.id, category, list, dispatch])
 
   /* Scroll to active item */
   useEffect(() => {
@@ -49,12 +72,12 @@ export default function GameBoy() {
   const selectItem = useCallback(item => dispatch({ type: 'SET_SELECTED', payload: item }), [dispatch])
 
   const navigate = useCallback(dir => {
-    if (!list.length) return
-    const idx = list.findIndex(i => i.id === selected?.id)
+    if (!filteredList.length) return
+    const idx = filteredList.findIndex(i => i.id === selected?.id)
     const next = idx + dir
-    if (next >= 0 && next < list.length) selectItem(list[next])
-    else if (idx === -1) selectItem(list[0])
-  }, [list, selected, selectItem])
+    if (next >= 0 && next < filteredList.length) selectItem(filteredList[next])
+    else if (idx === -1) selectItem(filteredList[0])
+  }, [filteredList, selected, selectItem])
 
   const btnA = useCallback(() => {
     if (!selected) return
@@ -70,6 +93,7 @@ export default function GameBoy() {
   const changeCategory = useCallback((dir) => {
     const next = (categoryIndex + dir + CATEGORIES.length) % CATEGORIES.length
     dispatch({ type: 'SET_CATEGORY', id: CATEGORIES[next].id, index: next })
+    setSearchQuery('') // Reset search on category change
   }, [categoryIndex, dispatch])
 
   const btnB = useCallback(() => {
@@ -83,8 +107,8 @@ export default function GameBoy() {
   }, [view, dispatch])
 
   const btnSelect = useCallback(() => {
-    if (list.length) selectItem(list[Math.floor(Math.random() * list.length)])
-  }, [list, selectItem])
+    if (filteredList.length) selectItem(filteredList[Math.floor(Math.random() * filteredList.length)])
+  }, [filteredList, selectItem])
 
   /* Keyboard */
   useEffect(() => {
@@ -103,20 +127,21 @@ export default function GameBoy() {
 
   const curCat = CATEGORIES[categoryIndex]
   const isFav  = selected ? favorites.some(f => f.id === selected.id && f.category === category) : false
+  const rateLimitPercentage = rateLimiter.getPercentage()
 
   return (
     <div className="shell">
 
-      {/* ═══════════ TOP: una sola Pokéball + pantalla ═══════════ */}
+      {/* ═══════════ TOP: Pokéballs + pantalla ═══════════ */}
       <div className="top-half">
 
-        {/* Fila decorativa: UNA pokéball centrada con logo */}
+        {/* Fila decorativa: conservando cambios del usuario */}
         <div className="top-deco">
           <div className="top-deco-line" />
           <div className="top-pokeball">
             <div className="pkb-t" /><div className="pkb-m" /><div className="pkb-b" />
           </div>
-          <div className="azul-label">• AZUL •</div>
+          <div className="azul-label">• Pokedéx •</div>
           <div className="top-pokeball">
             <div className="pkb-t" /><div className="pkb-m" /><div className="pkb-b" />
           </div>
@@ -126,17 +151,17 @@ export default function GameBoy() {
         {/* Zone: side-left + screen + side-right */}
         <div className="screen-zone">
 
-          {/* Left side */}
+          {/* Left side - conservando cambios del usuario */}
           <div className="side-l">
             <div className="side-circle">
               <img src={getPokemonSprite(4)} alt="Charmander"
-                style={{ width: 40, height: 40, imageRendering: 'pixelated' }} />
+                style={{ width: 60, height: 60, imageRendering: 'pixelated' }} />
             </div>
             <div className="leds">
               <div className="led led-g" />
               <div className="led led-b" />
             </div>
-            <span style={{ fontSize: 18 }}>🌙</span>
+            <span style={{ fontSize: 30 }}>🌙</span>
           </div>
 
           {/* SCREEN */}
@@ -153,16 +178,14 @@ export default function GameBoy() {
               <img src={getPokemonSprite(9)} alt="Blastoise"
                 style={{ width: 40, height: 40, imageRendering: 'pixelated' }} />
             </div>
-            {/* A = Favorito */}
             <button className="ab-btn a-btn" onClick={btnA} title="A = Favorito">A</button>
-            {/* B = Volver */}
             <button className="ab-btn b-btn" onClick={btnB} title="B = Volver">B</button>
           </div>
         </div>
 
-        {/* Row pokéballs bottom */}
+        {/* Row pokéballs bottom - conservando cambio a 2 */}
         <div className="bot-pokeball-row">
-          {Array.from({ length: 6 }, (_, i) => (
+          {Array.from({ length: 2 }, (_, i) => (
             <div key={i} className="pkball-sm"
               style={{ animationDelay: `${i * 0.2}s` }}>
               <div className="pkb-t" /><div className="pkb-m" /><div className="pkb-b" />
@@ -175,11 +198,10 @@ export default function GameBoy() {
       <div className="bot-half">
         <div className="bot-grid">
 
-          {/* ── LEFT: D-Pad (solo arriba/abajo) + mini card ── */}
+          {/* ── LEFT: D-Pad + mini card ── */}
           <div className="bot-left">
 
             <div className="dpad">
-              {/* Solo UP y DOWN — izq/der son decoración */}
               <div className="dpad-row">
                 <button className="dp dp-active" onClick={() => navigate(-1)} title="Anterior">▲</button>
               </div>
@@ -215,8 +237,15 @@ export default function GameBoy() {
             )}
           </div>
 
-          {/* ── RIGHT: 4 categorías + lista ── */}
+          {/* ── RIGHT: Búsqueda + categorías + lista ── */}
           <div className="bot-right">
+
+            {/* MEJORA #1: Barra de búsqueda con debounce */}
+            <SearchBar 
+              onSearch={setSearchQuery}
+              totalResults={filteredList.length}
+              isSearching={isSearching}
+            />
 
             {/* 4 category buttons */}
             <div className="cat-row">
@@ -232,6 +261,11 @@ export default function GameBoy() {
               ))}
             </div>
 
+            {/* MEJORA #5: Rate limiter visual */}
+            <div className="rate-limit-bar" title={`${rateLimiter.getRemaining()} requests restantes`}>
+              <div className="rate-limit-fill" style={{ width: `${rateLimitPercentage}%` }} />
+            </div>
+
             {/* Item list */}
             <div className="item-list">
               {listLoading && (
@@ -241,7 +275,7 @@ export default function GameBoy() {
                 </div>
               )}
 
-              {!listLoading && list.map(item => {
+              {!listLoading && filteredList.map(item => {
                 const active = selected?.id === item.id
                 const faved  = favorites.some(f => f.id === item.id && f.category === category)
                 return (
@@ -265,7 +299,7 @@ export default function GameBoy() {
           </div>
         </div>
 
-        {/* ── Bottom bar: START + SELECT + leyenda + speaker ── */}
+        {/* ── Bottom bar ── */}
         <div className="btn-bar">
           <div className="sys-wrap">
             <button className="sys-btn" onClick={btnStart}
@@ -278,7 +312,7 @@ export default function GameBoy() {
             </button>
           </div>
           <div className="key-legend">
-            A=FAV · B=BACK · ↑↓=NAV
+            A=FAV · B=BACK · ↑↓=NAV · 🔍=BUSCAR
           </div>
           <div className="speaker">
             {Array.from({ length: 9 }, (_, i) => <div key={i} className="sp-dot" />)}
