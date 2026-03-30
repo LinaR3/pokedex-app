@@ -1,18 +1,46 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react'
+import React, { useEffect, useCallback, useRef, useState, useMemo, useTransition } from 'react'
 import { useStore } from '../store/StoreContext'
-import { fetchList, fetchDetail, searchInList, prefetchNext, CATEGORIES, getPokemonSprite, rateLimiter } from '../api/index'
+import {
+  fetchList, fetchDetail, searchInList, prefetchNext,
+  CATEGORIES, getPokemonSprite, rateLimiter,
+} from '../api/index'
 import TopScreen from './TopScreen'
 import SearchBar from './SearchBar'
+import { useSwipe } from '../hooks/useSwipe'
 
 export default function GameBoy() {
   const { state, dispatch } = useStore()
   const { category, categoryIndex, list, selected, listLoading, view, favorites } = state
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filteredList, setFilteredList] = useState([])
-  const [isSearching, setIsSearching] = useState(false)
+  const [searchQuery, setSearchQuery]   = useState('')
+  const [isPending, startTransition]    = useTransition()
 
-  const activeRef = useRef(null)
+  // FIX #2: rateLimitPercentage reactivo con state propio
+  const [rateInfo, setRateInfo] = useState({
+    percentage: rateLimiter.getPercentage(),
+    remaining:  rateLimiter.getRemaining(),
+  })
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setRateInfo({
+        percentage: rateLimiter.getPercentage(),
+        remaining:  rateLimiter.getRemaining(),
+      })
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  const trackRequest = useCallback(() => {
+    rateLimiter.addRequest()
+    setRateInfo({
+      percentage: rateLimiter.getPercentage(),
+      remaining:  rateLimiter.getRemaining(),
+    })
+  }, [])
+
+  const activeRef  = useRef(null)
+  const shellRef   = useRef(null)
 
   /* ── Load list when category changes ── */
   useEffect(() => {
@@ -21,27 +49,22 @@ export default function GameBoy() {
       try {
         dispatch({ type: 'LIST_LOADING' })
         const items = await fetchList(category)
-        rateLimiter.addRequest()
-        if (!dead) {
-          dispatch({ type: 'SET_LIST', payload: items })
-          setFilteredList(items)
-        }
+        trackRequest()
+        if (!dead) dispatch({ type: 'SET_LIST', payload: items })
       } catch (e) {
         if (!dead) dispatch({ type: 'SET_ERROR', payload: e.message })
       }
     })()
     return () => { dead = true }
-  }, [category, dispatch])
+  }, [category, dispatch, trackRequest])
 
-  /* ── MEJORA #1: Búsqueda con debounce ── */
-  useEffect(() => {
-    setIsSearching(true)
-    const filtered = searchInList(list, searchQuery)
-    setFilteredList(filtered)
-    setIsSearching(false)
-  }, [searchQuery, list])
+  // FIX #1: filteredList con useMemo — isSearching usa isPending de useTransition
+  const filteredList = useMemo(
+    () => searchInList(list, searchQuery),
+    [list, searchQuery]
+  )
 
-  /* ── Load detail when selected changes + MEJORA #3: Prefetch ── */
+  /* ── Load detail when selected changes ── */
   useEffect(() => {
     if (!selected) return
     let dead = false
@@ -49,11 +72,9 @@ export default function GameBoy() {
       try {
         dispatch({ type: 'DETAIL_LOADING' })
         const data = await fetchDetail(category, selected.id)
-        rateLimiter.addRequest()
+        trackRequest()
         if (!dead) {
           dispatch({ type: 'SET_DETAIL', payload: data })
-          
-          // MEJORA #3: Prefetch siguiente item en background
           prefetchNext(category, list, selected.id)
         }
       } catch (e) {
@@ -61,7 +82,7 @@ export default function GameBoy() {
       }
     })()
     return () => { dead = true }
-  }, [selected?.id, category, list, dispatch])
+  }, [selected?.id, category, list, dispatch, trackRequest])
 
   /* Scroll to active item */
   useEffect(() => {
@@ -69,11 +90,14 @@ export default function GameBoy() {
   }, [selected?.id])
 
   /* ── Button handlers ── */
-  const selectItem = useCallback(item => dispatch({ type: 'SET_SELECTED', payload: item }), [dispatch])
+  const selectItem = useCallback(
+    item => dispatch({ type: 'SET_SELECTED', payload: item }),
+    [dispatch]
+  )
 
   const navigate = useCallback(dir => {
     if (!filteredList.length) return
-    const idx = filteredList.findIndex(i => i.id === selected?.id)
+    const idx  = filteredList.findIndex(i => i.id === selected?.id)
     const next = idx + dir
     if (next >= 0 && next < filteredList.length) selectItem(filteredList[next])
     else if (idx === -1) selectItem(filteredList[0])
@@ -86,14 +110,14 @@ export default function GameBoy() {
       payload: {
         id: selected.id, name: selected.name, category,
         sprite: category === 'pokemon' ? getPokemonSprite(selected.id) : null,
-      }
+      },
     })
   }, [selected, category, dispatch])
 
-  const changeCategory = useCallback((dir) => {
+  const changeCategory = useCallback(dir => {
     const next = (categoryIndex + dir + CATEGORIES.length) % CATEGORIES.length
     dispatch({ type: 'SET_CATEGORY', id: CATEGORIES[next].id, index: next })
-    setSearchQuery('') // Reset search on category change
+    startTransition(() => {})   // resetea búsqueda de forma limpia
   }, [categoryIndex, dispatch])
 
   const btnB = useCallback(() => {
@@ -107,35 +131,50 @@ export default function GameBoy() {
   }, [view, dispatch])
 
   const btnSelect = useCallback(() => {
-    if (filteredList.length) selectItem(filteredList[Math.floor(Math.random() * filteredList.length)])
+    if (filteredList.length)
+      selectItem(filteredList[Math.floor(Math.random() * filteredList.length)])
   }, [filteredList, selectItem])
 
   /* Keyboard */
   useEffect(() => {
     const h = e => {
-      if (e.key === 'ArrowUp')    navigate(-1)
-      if (e.key === 'ArrowDown')  navigate(1)
-      if (e.key === 'ArrowLeft')  changeCategory(-1)
-      if (e.key === 'ArrowRight') changeCategory(1)
-      if (e.key === 'a' || e.key === 'A') btnA()
-      if (e.key === 'b' || e.key === 'B') btnB()
-      if (e.key === 'Enter') btnStart()
+      if (e.key === 'ArrowUp')                navigate(-1)
+      if (e.key === 'ArrowDown')              navigate(1)
+      if (e.key === 'ArrowLeft')              changeCategory(-1)
+      if (e.key === 'ArrowRight')             changeCategory(1)
+      if (e.key === 'a' || e.key === 'A')     btnA()
+      if (e.key === 'b' || e.key === 'B')     btnB()
+      if (e.key === 'Enter')                  btnStart()
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
   }, [navigate, changeCategory, btnA, btnB, btnStart])
 
+  /* Mobile swipe gestures */
+  useSwipe(shellRef, {
+    onSwipeLeft:  () => changeCategory(1),
+    onSwipeRight: () => changeCategory(-1),
+    onSwipeUp:    () => navigate(1),
+    onSwipeDown:  () => navigate(-1),
+    threshold: 60,
+  })
+
+  /* Search handler — usa startTransition para que isPending funcione */
+  const handleSearch = useCallback(query => {
+    startTransition(() => setSearchQuery(query))
+  }, [])
+
   const curCat = CATEGORIES[categoryIndex]
-  const isFav  = selected ? favorites.some(f => f.id === selected.id && f.category === category) : false
-  const rateLimitPercentage = rateLimiter.getPercentage()
+  const isFav  = selected
+    ? favorites.some(f => f.id === selected.id && f.category === category)
+    : false
 
   return (
-    <div className="shell">
+    <div className="shell" ref={shellRef}>
 
       {/* ═══════════ TOP: Pokéballs + pantalla ═══════════ */}
       <div className="top-half">
 
-        {/* Fila decorativa: conservando cambios del usuario */}
         <div className="top-deco">
           <div className="top-deco-line" />
           <div className="top-pokeball">
@@ -148,14 +187,14 @@ export default function GameBoy() {
           <div className="top-deco-line" />
         </div>
 
-        {/* Zone: side-left + screen + side-right */}
         <div className="screen-zone">
 
-          {/* Left side - conservando cambios del usuario */}
           <div className="side-l">
             <div className="side-circle">
-              <img src={getPokemonSprite(4)} alt="Charmander"
-                style={{ width: 60, height: 60, imageRendering: 'pixelated' }} />
+              <img
+                src={getPokemonSprite(4)} alt="Charmander"
+                style={{ width: 60, height: 60, imageRendering: 'pixelated' }}
+              />
             </div>
             <div className="leds">
               <div className="led led-g" />
@@ -164,7 +203,6 @@ export default function GameBoy() {
             <span style={{ fontSize: 30 }}>🌙</span>
           </div>
 
-          {/* SCREEN */}
           <div className="screen-outer">
             <div className="screen-inner">
               <div className="scanlines" />
@@ -172,22 +210,21 @@ export default function GameBoy() {
             </div>
           </div>
 
-          {/* Right side */}
           <div className="side-r">
             <div className="side-circle">
-              <img src={getPokemonSprite(9)} alt="Blastoise"
-                style={{ width: 40, height: 40, imageRendering: 'pixelated' }} />
+              <img
+                src={getPokemonSprite(9)} alt="Blastoise"
+                style={{ width: 40, height: 40, imageRendering: 'pixelated' }}
+              />
             </div>
             <button className="ab-btn a-btn" onClick={btnA} title="A = Favorito">A</button>
             <button className="ab-btn b-btn" onClick={btnB} title="B = Volver">B</button>
           </div>
         </div>
 
-        {/* Row pokéballs bottom - conservando cambio a 2 */}
         <div className="bot-pokeball-row">
           {Array.from({ length: 2 }, (_, i) => (
-            <div key={i} className="pkball-sm"
-              style={{ animationDelay: `${i * 0.2}s` }}>
+            <div key={i} className="pkball-sm" style={{ animationDelay: `${i * 0.2}s` }}>
               <div className="pkb-t" /><div className="pkb-m" /><div className="pkb-b" />
             </div>
           ))}
@@ -200,7 +237,6 @@ export default function GameBoy() {
 
           {/* ── LEFT: D-Pad + mini card ── */}
           <div className="bot-left">
-
             <div className="dpad">
               <div className="dpad-row">
                 <button className="dp dp-active" onClick={() => navigate(-1)} title="Anterior">▲</button>
@@ -208,14 +244,13 @@ export default function GameBoy() {
               <div className="dpad-mid">
                 <button className="dp dp-active" onClick={() => changeCategory(-1)} title="◄ Categoría anterior">◄</button>
                 <div className="dp-center" />
-                <button className="dp dp-active" onClick={() => changeCategory(1)} title="► Categoría siguiente">►</button>
+                <button className="dp dp-active" onClick={() => changeCategory(1)}  title="► Categoría siguiente">►</button>
               </div>
               <div className="dpad-row">
-                <button className="dp dp-active" onClick={() => navigate(1)} title="Siguiente">▼</button>
+                <button className="dp dp-active" onClick={() => navigate(1)}  title="Siguiente">▼</button>
               </div>
             </div>
 
-            {/* Mini card del seleccionado */}
             {selected ? (
               <div className="mini-card">
                 {category === 'pokemon'
@@ -240,14 +275,13 @@ export default function GameBoy() {
           {/* ── RIGHT: Búsqueda + categorías + lista ── */}
           <div className="bot-right">
 
-            {/* MEJORA #1: Barra de búsqueda con debounce */}
-            <SearchBar 
-              onSearch={setSearchQuery}
+            {/* FIX #1: onSearch usa handleSearch con startTransition */}
+            <SearchBar
+              onSearch={handleSearch}
               totalResults={filteredList.length}
-              isSearching={isSearching}
+              isSearching={isPending}
             />
 
-            {/* 4 category buttons */}
             <div className="cat-row">
               {CATEGORIES.map((cat, i) => (
                 <button
@@ -261,12 +295,17 @@ export default function GameBoy() {
               ))}
             </div>
 
-            {/* MEJORA #5: Rate limiter visual */}
-            <div className="rate-limit-bar" title={`${rateLimiter.getRemaining()} requests restantes`}>
-              <div className="rate-limit-fill" style={{ width: `${rateLimitPercentage}%` }} />
+            {/* FIX #2: rate limit bar ahora es reactiva */}
+            <div
+              className="rate-limit-bar"
+              title={`${rateInfo.remaining} requests restantes`}
+            >
+              <div
+                className="rate-limit-fill"
+                style={{ width: `${rateInfo.percentage}%` }}
+              />
             </div>
 
-            {/* Item list */}
             <div className="item-list">
               {listLoading && (
                 <div className="list-spin-wrap">
@@ -299,15 +338,12 @@ export default function GameBoy() {
           </div>
         </div>
 
-        {/* ── Bottom bar ── */}
         <div className="btn-bar">
           <div className="sys-wrap">
-            <button className="sys-btn" onClick={btnStart}
-              title="START = Favoritos">
+            <button className="sys-btn" onClick={btnStart} title="START = Favoritos">
               {view === 'favorites' ? '◄ LISTA' : '❤ FAVS'}
             </button>
-            <button className="sys-btn" onClick={btnSelect}
-              title="SELECT = Aleatorio">
+            <button className="sys-btn" onClick={btnSelect} title="SELECT = Aleatorio">
               ⚄ RANDOM
             </button>
           </div>

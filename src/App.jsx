@@ -2,6 +2,7 @@ import React from 'react'
 import { StoreProvider } from './store/StoreContext'
 import GameBoy from './components/GameBoy'
 import './styles/gameboy.css'
+import './styles/mobile.css'
 
 export default function App() {
   return (

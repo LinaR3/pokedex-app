@@ -1,6 +1,8 @@
 import React from 'react'
 import { useStore } from '../store/StoreContext'
 import { TYPE_COLORS, getPokemonSprite, CATEGORIES } from '../api/index'
+import EvolutionTree from './EvolutionTree'
+import RadarChart from './RadarChart'
 
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ') : ''
 const unk = v => (!v || v === 'unknown' || v === 'n/a') ? '???' : v
@@ -20,7 +22,7 @@ export default function TopScreen() {
       payload: {
         id: selected.id, name: selected.name, category,
         sprite: category === 'pokemon' ? getPokemonSprite(selected.id) : null,
-      }
+      },
     })
   }
 
@@ -49,21 +51,30 @@ export default function TopScreen() {
         )}
         <div className="fav-list">
           {favorites.map(f => (
-            <div key={`${f.category}-${f.id}`} className="fav-item"
+            <div
+              key={`${f.category}-${f.id}`}
+              className="fav-item"
               onClick={() => {
                 const idx = CATEGORIES.findIndex(c => c.id === f.category)
                 dispatch({ type: 'SET_CATEGORY', id: f.category, index: idx >= 0 ? idx : 0 })
                 dispatch({ type: 'SET_SELECTED', payload: f })
-              }}>
+              }}
+            >
               {f.sprite
                 ? <img src={f.sprite} alt={f.name} className="fav-item-img" />
-                : <span className="fav-item-emoji">👾</span>}
+                : <span className="fav-item-emoji">👾</span>
+              }
               <div>
                 <div className="fav-item-name">{f.name.toUpperCase()}</div>
                 <div className="fav-item-cat">{f.category}</div>
               </div>
-              <button className="fav-item-del"
-                onClick={e => { e.stopPropagation(); dispatch({ type: 'REMOVE_FAV', id: f.id, category: f.category }) }}>
+              <button
+                className="fav-item-del"
+                onClick={e => {
+                  e.stopPropagation()
+                  dispatch({ type: 'REMOVE_FAV', id: f.id, category: f.category })
+                }}
+              >
                 ✕
               </button>
             </div>
@@ -77,7 +88,9 @@ export default function TopScreen() {
   if (detailLoading) {
     return (
       <div className="sc sc-loading">
-        <div className="loader"><div className="l-t"/><div className="l-m"/><div className="l-b"/></div>
+        <div className="loader">
+          <div className="l-t" /><div className="l-m" /><div className="l-b" />
+        </div>
         <p className="loader-txt">Cargando datos...</p>
       </div>
     )
@@ -100,14 +113,16 @@ export default function TopScreen() {
     return (
       <div className="sc sc-poke">
 
-        {/* Header */}
         <div className="pk-header">
           <span className="pk-num">#{String(detail.id).padStart(3, '0')}</span>
           <span className="pk-name">{detail.name.toUpperCase()}</span>
           <div className="pk-types">
             {detail.types.map(t => (
-              <span key={t.type.name} className="type-badge"
-                style={{ background: TYPE_COLORS[t.type.name] || '#888' }}>
+              <span
+                key={t.type.name}
+                className="type-badge"
+                style={{ background: TYPE_COLORS[t.type.name] || '#888' }}
+              >
                 {t.type.name.toUpperCase()}
               </span>
             ))}
@@ -117,9 +132,9 @@ export default function TopScreen() {
           </button>
         </div>
 
-        {/* Body: sprite + stats */}
         <div className="pk-body">
           <div className="pk-left">
+            {/* FIX #4: SpriteWithFallback sin useEffect redundante */}
             <SpriteWithFallback
               key={detail.id}
               numId={detail.id}
@@ -127,33 +142,36 @@ export default function TopScreen() {
               name={detail.name}
             />
             {detail._genus && <div className="pk-genus">{detail._genus}</div>}
-            <div className="pk-hw">{(detail.height * 0.1).toFixed(1)}m · {(detail.weight * 0.1).toFixed(1)}kg</div>
+            <div className="pk-hw">
+              {(detail.height * 0.1).toFixed(1)}m · {(detail.weight * 0.1).toFixed(1)}kg
+            </div>
           </div>
 
+          {/* Radar chart en lugar de barras planas */}
           <div className="pk-stats">
-            {detail.stats.slice(0, 5).map(s => {
-              const pct = Math.min((s.base_stat / 255) * 100, 100)
-              const clr = s.base_stat > 100 ? '#4FC3F7' : s.base_stat > 60 ? '#66BB6A' : '#FF7043'
-              const lbl = s.stat.name
-                .replace('special-attack', 'SP.A').replace('special-defense', 'SP.D')
-                .replace('attack', 'ATK').replace('defense', 'DEF')
-                .replace('speed', 'SPD').replace('hp', 'HP').toUpperCase()
-              return (
-                <div key={s.stat.name} className="stat-row">
-                  <span className="stat-lbl">{lbl}</span>
-                  <div className="stat-bg">
-                    <div className="stat-fill" key={`${detail.id}-${s.stat.name}`}
-                      style={{ '--pct': `${pct}%`, background: clr }} />
-                  </div>
-                  <span className="stat-val">{s.base_stat}</span>
-                </div>
-              )
-            })}
+            <RadarChart
+              stats={detail.stats.slice(0, 6).map(s => ({
+                name: s.stat.name,
+                value: s.base_stat,
+              }))}
+              size={150}
+              color="#3b82f6"
+              animated
+            />
             <div className="pk-abilities">
               {detail.abilities.map(a => cap(a.ability.name)).join(' · ')}
             </div>
           </div>
         </div>
+
+        {/* Cadena evolutiva */}
+        {detail._evolutionChain?.chain && (
+          <EvolutionTree
+            chain={detail._evolutionChain.chain}
+            currentId={String(detail.id)}
+            onSelect={item => dispatch({ type: 'SET_SELECTED', payload: item })}
+          />
+        )}
 
         {detail._flavorText && (
           <div className="pk-flavor"><p>{detail._flavorText}</p></div>
@@ -168,15 +186,16 @@ export default function TopScreen() {
       detail.flavor_text_entries?.find(e => e.language.name === 'es') ||
       detail.flavor_text_entries?.find(e => e.language.name === 'en')
     )?.flavor_text?.replace(/[\f\n\r]/g, ' ')
+
     const genus = (
       detail.genera?.find(g => g.language.name === 'es') ||
       detail.genera?.find(g => g.language.name === 'en')
     )?.genus
+
     const nameEs = detail.names?.find(n => n.language.name === 'es')?.name || detail.name
 
     return (
       <div className="sc sc-species">
-
         <div className="sp-header">
           <span className="sp-num">#{String(detail.id).padStart(3, '0')}</span>
           <span className="sp-name">{nameEs.toUpperCase()}</span>
@@ -221,7 +240,6 @@ export default function TopScreen() {
     const color = TYPE_COLORS[detail.name] || '#888'
     return (
       <div className="sc sc-type">
-
         <div className="tp-header">
           <span className="tp-badge" style={{ background: color }}>
             {detail.name.toUpperCase()}
@@ -245,9 +263,11 @@ export default function TopScreen() {
 
   /* ══════════════ VERSIONES ══════════════ */
   if (detail._category === 'version') {
-    const nameEs = detail.names?.find(n => n.language.name === 'es')?.name
-      || detail.names?.find(n => n.language.name === 'en')?.name
-      || cap(detail.name)
+    const nameEs =
+      detail.names?.find(n => n.language.name === 'es')?.name ||
+      detail.names?.find(n => n.language.name === 'en')?.name ||
+      cap(detail.name)
+
     return (
       <div className="sc sc-version">
         <div className="vr-header">
@@ -270,17 +290,17 @@ export default function TopScreen() {
   return null
 }
 
-/* ── Animated sprite with fallback ── */
+/* ════════════════════════════════════════
+   FIX #4: SpriteWithFallback sin useEffect
+   El key={detail.id} en el padre ya fuerza
+   remount — el effect era redundante y causaba
+   double-load en race condition.
+════════════════════════════════════════ */
 function SpriteWithFallback({ numId, fallback, name }) {
-  const [src, setSrc] = React.useState(
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${numId}.gif`
-  )
-  const [triedFallback, setTriedFallback] = React.useState(false)
+  const gifUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${numId}.gif`
 
-  React.useEffect(() => {
-    setSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${numId}.gif`)
-    setTriedFallback(false)
-  }, [numId])
+  const [src, setSrc]                   = React.useState(gifUrl)
+  const [triedFallback, setTriedFallback] = React.useState(false)
 
   const handleError = () => {
     if (!triedFallback) {
@@ -291,8 +311,7 @@ function SpriteWithFallback({ numId, fallback, name }) {
 
   return (
     <img
-      key={`${numId}-${triedFallback}`}
-      className={`pk-sprite ${!triedFallback ? 'anim-bounce' : 'anim-bounce'}`}
+      className="pk-sprite anim-bounce"
       src={src}
       onError={handleError}
       alt={name}
@@ -317,8 +336,11 @@ function TypeRow({ label, types, clr }) {
       <span className="tp-rel-lbl" style={{ color: clr }}>{label}</span>
       <div className="tp-rel-pills">
         {types.map(t => (
-          <span key={t.name} className="type-badge sm"
-            style={{ background: TYPE_COLORS[t.name] || '#888' }}>
+          <span
+            key={t.name}
+            className="type-badge sm"
+            style={{ background: TYPE_COLORS[t.name] || '#888' }}
+          >
             {t.name.toUpperCase()}
           </span>
         ))}
