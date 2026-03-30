@@ -1,43 +1,60 @@
-/* ════════════════════════════════════════
-   CACHE MANAGER WITH TTL
-   Para demostrar manejo avanzado de APIs
-════════════════════════════════════════ */
+const DEBUG = import.meta.env.DEV
 
+/**
+ * Simple in-memory key/value cache with Time-To-Live expiry.
+ * Avoids redundant API calls for data that doesn't change often.
+ *
+ * @example
+ * const cache = new CacheManager(5 * 60 * 1000) // 5-minute TTL
+ * cache.set('pokemon:25', pikachuData)
+ * cache.get('pokemon:25') // returns pikachuData or null if expired
+ */
 class CacheManager {
-  constructor(ttl = 5 * 60 * 1000) {  // 5 minutos default
-    this.cache = new Map()
-    this.ttl = ttl
+  /**
+   * @param {number} ttl - Time to live in milliseconds (default: 5 minutes)
+   */
+  constructor(ttl = 5 * 60 * 1000) {
+    this._cache = new Map()
+    this._ttl   = ttl
   }
 
+  /**
+   * Returns cached data for a key, or null if missing/expired.
+   * @param {string} key
+   * @returns {*|null}
+   */
   get(key) {
-    const entry = this.cache.get(key)
+    const entry = this._cache.get(key)
     if (!entry) return null
-    
-    const now = Date.now()
-    if (now - entry.timestamp > this.ttl) {
-      this.cache.delete(key)
+
+    if (Date.now() - entry.timestamp > this._ttl) {
+      this._cache.delete(key)
       return null
     }
-    
-    console.log(`✅ CACHE HIT: ${key}`)
+
+    if (DEBUG) console.log(`[cache] HIT  ${key}`)
     return entry.data
   }
 
+  /**
+   * Stores data under a key with the current timestamp.
+   * @param {string} key
+   * @param {*}      data
+   */
   set(key, data) {
-    console.log(`💾 CACHE SET: ${key}`)
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now()
-    })
+    if (DEBUG) console.log(`[cache] SET  ${key}`)
+    this._cache.set(key, { data, timestamp: Date.now() })
   }
 
+  /** Removes all cached entries. */
   clear() {
-    this.cache.clear()
-    console.log('🗑️  Cache cleared')
+    this._cache.clear()
+    if (DEBUG) console.log('[cache] CLEARED')
   }
 
-  size() {
-    return this.cache.size
+  /** @returns {number} Number of live (non-expired) entries. */
+  get size() {
+    return this._cache.size
   }
 }
 

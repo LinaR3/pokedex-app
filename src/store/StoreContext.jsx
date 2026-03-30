@@ -1,82 +1,99 @@
 import React, { createContext, useContext, useReducer } from 'react'
+import { loadFromStorage, saveToStorage } from '../utils/storage'
+import { favKey } from '../utils/format'
+import { ACTIONS } from './actions'
 
-/* ─── helpers ─── */
-const load = (key, def) => {
-  try { return JSON.parse(localStorage.getItem(key) ?? 'null') ?? def }
-  catch { return def }
-}
-const save = (key, val) => localStorage.setItem(key, JSON.stringify(val))
+const FAVORITES_STORAGE_KEY = 'gba-favorites'
 
-/* ─── initial state ─── */
-const init = {
-  favorites:     load('gba-favorites', []),   // [{ id, name, category, sprite }]
-  category:      'pokemon',                   // active category
+// ── Initial state ─────────────────────────────────────────────────────────────
+const initialState = {
+  favorites:     loadFromStorage(FAVORITES_STORAGE_KEY, []),
+  category:      'pokemon',
   categoryIndex: 0,
-  list:          [],                          // items for current category
-  selected:      null,                        // { id, name, url }
-  detail:        null,                        // full API response
+  list:          [],
+  selected:      null,
+  detail:        null,
   listLoading:   false,
   detailLoading: false,
   error:         null,
-  view:          'list',                      // 'list' | 'detail' | 'favorites'
+  view:          'list', // 'list' | 'detail' | 'favorites'
 }
 
-/* ─── reducer ─── */
-function reducer(s, a) {
-  switch (a.type) {
+// ── Reducer ───────────────────────────────────────────────────────────────────
+function reducer(state, action) {
+  switch (action.type) {
 
-    case 'SET_CATEGORY':
+    case ACTIONS.SET_CATEGORY:
       return {
-        ...s,
-        category: a.id, categoryIndex: a.index,
-        list: [], selected: null, detail: null,
-        view: 'list', error: null
+        ...state,
+        category:      action.id,
+        categoryIndex: action.index,
+        list:          [],
+        selected:      null,
+        detail:        null,
+        view:          'list',
+        error:         null,
       }
 
-    case 'LIST_LOADING':  return { ...s, listLoading: true,   error: null }
-    case 'SET_LIST':      return { ...s, list: a.payload,      listLoading: false }
+    case ACTIONS.LIST_LOADING:
+      return { ...state, listLoading: true, error: null }
 
-    case 'SET_SELECTED':
-      if (a.payload === null) {
-        return { ...s, selected: null, detail: null, view: 'list' }
+    case ACTIONS.SET_LIST:
+      return { ...state, list: action.payload, listLoading: false }
+
+    case ACTIONS.SET_SELECTED:
+      if (action.payload === null) {
+        return { ...state, selected: null, detail: null, view: 'list' }
       }
-      return { ...s, selected: a.payload, detail: null, view: 'detail' }
+      return { ...state, selected: action.payload, detail: null, view: 'detail' }
 
-    case 'DETAIL_LOADING': return { ...s, detailLoading: true, error: null }
-    case 'SET_DETAIL':     return { ...s, detail: a.payload,   detailLoading: false }
+    case ACTIONS.DETAIL_LOADING:
+      return { ...state, detailLoading: true, error: null }
 
-    case 'SET_ERROR':
-      return { ...s, error: a.payload, listLoading: false, detailLoading: false }
+    case ACTIONS.SET_DETAIL:
+      return { ...state, detail: action.payload, detailLoading: false }
 
-    case 'SET_VIEW':       return { ...s, view: a.payload }
+    case ACTIONS.SET_ERROR:
+      return { ...state, error: action.payload, listLoading: false, detailLoading: false }
 
-    case 'TOGGLE_FAV': {
-      const fav = a.payload                   // { id, name, category, sprite }
-      const key = `${fav.category}::${fav.id}`
-      const exists = s.favorites.find(f => `${f.category}::${f.id}` === key)
-      const next = exists
-        ? s.favorites.filter(f => `${f.category}::${f.id}` !== key)
-        : [...s.favorites, fav]
-      save('gba-favorites', next)
-      return { ...s, favorites: next }
+    case ACTIONS.SET_VIEW:
+      return { ...state, view: action.payload }
+
+    case ACTIONS.TOGGLE_FAV: {
+      const item    = action.payload
+      const key     = favKey(item.category, item.id)
+      const exists  = state.favorites.some((f) => favKey(f.category, f.id) === key)
+      const updated = exists
+        ? state.favorites.filter((f) => favKey(f.category, f.id) !== key)
+        : [...state.favorites, item]
+
+      saveToStorage(FAVORITES_STORAGE_KEY, updated)
+      return { ...state, favorites: updated }
     }
 
-    case 'REMOVE_FAV': {
-      const next = s.favorites.filter(f => !(f.id === a.id && f.category === a.category))
-      save('gba-favorites', next)
-      return { ...s, favorites: next }
+    case ACTIONS.REMOVE_FAV: {
+      const updated = state.favorites.filter(
+        (f) => !(f.id === action.id && f.category === action.category)
+      )
+      saveToStorage(FAVORITES_STORAGE_KEY, updated)
+      return { ...state, favorites: updated }
     }
 
-    default: return s
+    default:
+      return state
   }
 }
 
-/* ─── context ─── */
-const Ctx = createContext(null)
+// ── Context & Provider ────────────────────────────────────────────────────────
+const StoreContext = createContext(null)
 
 export function StoreProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, init)
-  return <Ctx.Provider value={{ state, dispatch }}>{children}</Ctx.Provider>
+  const [state, dispatch] = useReducer(reducer, initialState)
+  return (
+    <StoreContext.Provider value={{ state, dispatch }}>
+      {children}
+    </StoreContext.Provider>
+  )
 }
 
-export const useStore = () => useContext(Ctx)
+export const useStore = () => useContext(StoreContext)
