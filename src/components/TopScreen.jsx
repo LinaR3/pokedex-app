@@ -128,7 +128,6 @@ function FavoritesScreen({ favorites, dispatch }) {
                 e.stopPropagation()
                 dispatch({ type: ACTIONS.REMOVE_FAV, id: fav.id, category: fav.category })
               }}
-              aria-label={`Eliminar ${fav.name} de favoritos`}
             >
               ✕
             </button>
@@ -298,11 +297,10 @@ function VersionScreen({ detail, isFavorite, onToggleFavorite }) {
 
 // ── Reusable micro-components ─────────────────────────────────────────────────
 
-/** Pokémon sprite with GIF → static fallback on error. */
 function SpriteWithFallback({ id, fallback, name }) {
   const gifUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`
-  const [src, setSrc]             = React.useState(gifUrl)
-  const [usedFallback, setUsed]   = React.useState(false)
+  const [src, setSrc] = React.useState(gifUrl)
+  const [usedFallback, setUsed] = React.useState(false)
 
   const handleError = () => {
     if (!usedFallback) {
@@ -337,7 +335,6 @@ function FavButton({ isFavorite, onToggle }) {
     <button
       className={`fav-sc-btn ${isFavorite ? 'on' : ''}`}
       onClick={onToggle}
-      aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
     >
       {isFavorite ? '❤' : '♡'}
     </button>

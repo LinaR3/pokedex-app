@@ -9,25 +9,24 @@ import { useSwipe } from '../hooks/useSwipe'
 import { favKey } from '../utils/format'
 import TopScreen from './TopScreen'
 import SearchBar from './SearchBar'
+import ErrorBoundary from './ErrorBoundary'
 
 export default function GameBoy() {
   const { state, dispatch } = useStore()
   const { category, categoryIndex, list, selected, listLoading, view, favorites } = state
 
-  const [searchQuery, setSearchQuery]  = useState('')
-  const [isPending, startTransition]   = useTransition()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isPending, startTransition] = useTransition()
   const { percentage, remaining, trackRequest } = useRateLimit()
 
   const activeRef = useRef(null)
-  const shellRef  = useRef(null)
+  const shellRef = useRef(null)
 
-  // ── Filtered list (reactive to search, no side effects) ──────────────────
   const filteredList = useMemo(
     () => searchInList(list, searchQuery),
     [list, searchQuery]
   )
 
-  // ── Navigation & button handlers ─────────────────────────────────────────
   const {
     selectItem,
     navigate,
@@ -38,71 +37,66 @@ export default function GameBoy() {
     handleRandom,
   } = useNavigation(filteredList)
 
-  // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useKeyboard({
-    onUp:    () => navigate(-1),
-    onDown:  () => navigate(1),
-    onLeft:  () => changeCategory(-1),
+    onUp: () => navigate(-1),
+    onDown: () => navigate(1),
+    onLeft: () => changeCategory(-1),
     onRight: () => changeCategory(1),
-    onA:     handleFavorite,
-    onB:     handleBack,
+    onA: handleFavorite,
+    onB: handleBack,
     onStart: handleToggleFavorites,
   })
 
-  // ── Swipe gestures (mobile) ───────────────────────────────────────────────
   useSwipe(shellRef, {
-    onSwipeLeft:  () => changeCategory(1),
+    onSwipeLeft: () => changeCategory(1),
     onSwipeRight: () => changeCategory(-1),
-    onSwipeUp:    () => navigate(1),
-    onSwipeDown:  () => navigate(-1),
+    onSwipeUp: () => navigate(1),
+    onSwipeDown: () => navigate(-1),
     threshold: 60,
   })
 
-  // ── Load list when category changes ──────────────────────────────────────
+  // Load list when category changes
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      try {
-        dispatch({ type: ACTIONS.LIST_LOADING })
-        const items = await fetchList(category)
-        trackRequest()
-        if (!cancelled) dispatch({ type: ACTIONS.SET_LIST, payload: items })
-      } catch (error) {
-        if (!cancelled) dispatch({ type: ACTIONS.SET_ERROR, payload: error.message })
-      }
-    })()
+      ; (async () => {
+        try {
+          dispatch({ type: ACTIONS.LIST_LOADING })
+          const items = await fetchList(category)
+          trackRequest()
+          if (!cancelled) dispatch({ type: ACTIONS.SET_LIST, payload: items })
+        } catch (error) {
+          if (!cancelled) dispatch({ type: ACTIONS.SET_ERROR, payload: error.message })
+        }
+      })()
     return () => { cancelled = true }
   }, [category, dispatch, trackRequest])
 
-  // ── Load detail when selected item changes ────────────────────────────────
+  // Load detail when selected item changes
   useEffect(() => {
     if (!selected) return
     let cancelled = false
-    ;(async () => {
-      try {
-        dispatch({ type: ACTIONS.DETAIL_LOADING })
-        const data = await fetchDetail(category, selected.id)
-        trackRequest()
-        if (!cancelled) {
-          dispatch({ type: ACTIONS.SET_DETAIL, payload: data })
-          prefetchNext(category, list, selected.id)
+      ; (async () => {
+        try {
+          dispatch({ type: ACTIONS.DETAIL_LOADING })
+          const data = await fetchDetail(category, selected.id)
+          trackRequest()
+          if (!cancelled) {
+            dispatch({ type: ACTIONS.SET_DETAIL, payload: data })
+            prefetchNext(category, list, selected.id)
+          }
+        } catch (error) {
+          if (!cancelled) dispatch({ type: ACTIONS.SET_ERROR, payload: error.message })
         }
-      } catch (error) {
-        if (!cancelled) dispatch({ type: ACTIONS.SET_ERROR, payload: error.message })
-      }
-    })()
+      })()
     return () => { cancelled = true }
   }, [selected?.id, category, list, dispatch, trackRequest])
 
-  // ── Scroll active list item into view ────────────────────────────────────
   useEffect(() => {
     activeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [selected?.id])
 
-  // ── Search with transition (keeps isPending accurate) ────────────────────
   const handleSearch = (query) => startTransition(() => setSearchQuery(query))
 
-  // ── Derived state ─────────────────────────────────────────────────────────
   const currentCategory = CATEGORIES[categoryIndex]
   const isSelectedFavorite = selected
     ? favorites.some((f) => favKey(f.category, f.id) === favKey(category, selected.id))
@@ -155,13 +149,15 @@ function TopHalf({ categoryIndex, onFavorite, onBack }) {
         <div className="screen-outer">
           <div className="screen-inner">
             <div className="scanlines" />
-            <TopScreen />
+            <ErrorBoundary>
+              <TopScreen />
+            </ErrorBoundary>
           </div>
         </div>
 
         <SidePanel pokemon={9} name="Blastoise" size={40} side="right">
           <button className="ab-btn a-btn" onClick={onFavorite} title="A = Favorito">A</button>
-          <button className="ab-btn b-btn" onClick={onBack}     title="B = Volver">B</button>
+          <button className="ab-btn b-btn" onClick={onBack} title="B = Volver">B</button>
         </SidePanel>
       </div>
 
@@ -181,7 +177,6 @@ function BottomHalf({
     <div className="bot-half">
       <div className="bot-grid">
 
-        {/* D-Pad + mini card */}
         <div className="bot-left">
           <DPad
             onUp={() => onNavigate(-1)}
@@ -198,7 +193,6 @@ function BottomHalf({
           />
         </div>
 
-        {/* Search + categories + list */}
         <div className="bot-right">
           <SearchBar
             onSearch={onSearch}
@@ -219,10 +213,7 @@ function BottomHalf({
             ))}
           </div>
 
-          <div
-            className="rate-limit-bar"
-            title={`${rateLimitRemaining} requests restantes`}
-          >
+          <div className="rate-limit-bar" title={`${rateLimitRemaining} requests restantes`}>
             <div className="rate-limit-fill" style={{ width: `${rateLimitPercentage}%` }} />
           </div>
 
@@ -241,10 +232,10 @@ function BottomHalf({
 
       <div className="btn-bar">
         <div className="sys-wrap">
-          <button className="sys-btn" onClick={onToggleFavorites} title="START = Favoritos">
+          <button className="sys-btn" onClick={onToggleFavorites}>
             {view === 'favorites' ? '◄ LISTA' : '❤ FAVS'}
           </button>
-          <button className="sys-btn" onClick={onRandom} title="SELECT = Aleatorio">
+          <button className="sys-btn" onClick={onRandom}>
             ⚄ RANDOM
           </button>
         </div>
@@ -317,15 +308,15 @@ function DPad({ onUp, onDown, onLeft, onRight }) {
   return (
     <div className="dpad">
       <div className="dpad-row">
-        <button className="dp dp-active" onClick={onUp}    title="Anterior">▲</button>
+        <button className="dp dp-active" onClick={onUp}>▲</button>
       </div>
       <div className="dpad-mid">
-        <button className="dp dp-active" onClick={onLeft}  title="◄ Categoría">◄</button>
+        <button className="dp dp-active" onClick={onLeft}>◄</button>
         <div className="dp-center" />
-        <button className="dp dp-active" onClick={onRight} title="► Categoría">►</button>
+        <button className="dp dp-active" onClick={onRight}>►</button>
       </div>
       <div className="dpad-row">
-        <button className="dp dp-active" onClick={onDown}  title="Siguiente">▼</button>
+        <button className="dp dp-active" onClick={onDown}>▼</button>
       </div>
     </div>
   )
@@ -372,7 +363,7 @@ function ItemList({ items, selected, favorites, category, currentCategory, loadi
   return (
     <div className="item-list">
       {items.map((item) => {
-        const isActive    = selected?.id === item.id
+        const isActive = selected?.id === item.id
         const isFavorited = favorites.some(
           (f) => favKey(f.category, f.id) === favKey(category, item.id)
         )
