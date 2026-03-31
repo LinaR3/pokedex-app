@@ -173,7 +173,7 @@ function PokemonScreen({ detail, isFavorite, onToggleFavorite, dispatch }) {
         </div>
 
         <div className="pk-stats">
-          <RadarChart stats={stats} size={150} color="#3b82f6" animated />
+          <RadarChart stats={stats} size={140} animated />
           <div className="pk-abilities">
             {detail.abilities.map((a) => capitalize(a.ability.name)).join(' · ')}
           </div>

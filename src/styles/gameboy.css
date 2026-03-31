@@ -668,3 +668,212 @@ body { background: #040b1a; }
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+/* ================================================
+   EVOLUTION TREE — pegar en gameboy.css
+   Reemplaza TODAS las reglas .evo-* anteriores
+================================================ */
+
+/* Wrapper — fade-in on load */
+.evo-tree {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .35s ease, transform .35s ease;
+  padding: 6px 6px 2px;
+  flex-shrink: 0;
+}
+.evo-tree.evo-tree-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Section label */
+.evo-tree-label {
+  font-family: var(--font);
+  font-size: 5px;
+  color: var(--scr-dk);
+  opacity: .5;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+}
+
+/* ── LINEAR layout ─────────────────────── */
+.evo-linear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.evo-linear::-webkit-scrollbar { display: none; }
+
+/* ── BRANCHING layout ──────────────────── */
+.evo-branching {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.evo-branching::-webkit-scrollbar { display: none; }
+
+.evo-prefix-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Horizontal line connecting prefix to branch column */
+.evo-fork-line {
+  width: 8px;
+  height: 1px;
+  background: rgba(0,0,0,.2);
+  flex-shrink: 0;
+}
+
+/* Column of branches */
+.evo-branches-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Each individual branch row */
+.evo-branch-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  animation: evo-slide-in .3s ease both;
+}
+@keyframes evo-slide-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Branch arrow area (trigger badge + chevron) */
+.evo-branch-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+  padding: 0 3px;
+}
+
+/* ── Stage button ──────────────────────── */
+.evo-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 5px;
+  background: rgba(0,0,0,.1);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+  flex-shrink: 0;
+  animation: evo-pop-in .35s cubic-bezier(.175,.885,.32,1.275) both;
+}
+@keyframes evo-pop-in {
+  from { opacity: 0; transform: scale(.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.evo-stage:hover {
+  background: rgba(0,0,0,.2);
+  border-color: rgba(0,0,0,.25);
+}
+.evo-stage:active {
+  transform: scale(.92);
+}
+
+/* Currently displayed Pokémon */
+.evo-stage.evo-active {
+  background: rgba(0,0,0,.22);
+  border-color: rgba(0,0,0,.4);
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,.2), inset 0 0 6px rgba(0,0,0,.15);
+}
+.evo-stage.evo-active .evo-sprite {
+  filter: drop-shadow(0 0 4px rgba(0,0,0,.35));
+}
+
+/* Sprite */
+.evo-sprite {
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+  display: block;
+}
+
+/* Pokémon name */
+.evo-pokemon-name {
+  font-family: var(--font);
+  font-size: 4.5px;
+  color: var(--scr-dk);
+  text-align: center;
+  line-height: 1.4;
+  max-width: 46px;
+  word-break: break-word;
+  text-transform: capitalize;
+}
+
+/* Pokémon #ID */
+.evo-pokemon-id {
+  font-family: var(--font);
+  font-size: 4px;
+  color: var(--scr-dk);
+  opacity: .5;
+}
+
+/* ── Arrow connector (linear) ──────────── */
+.evo-arrow-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+.evo-connector-line {
+  width: 1px;
+  height: 6px;
+  background: rgba(0,0,0,.15);
+}
+
+.evo-chevron {
+  font-size: 7px;
+  color: var(--scr-dk);
+  opacity: .45;
+}
+
+/* ── Trigger badge ─────────────────────── */
+.evo-trigger-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+  max-width: 40px;
+}
+
+.evo-trigger-icon {
+  font-size: 7px;
+  color: var(--scr-dk);
+  opacity: .6;
+  line-height: 1;
+}
+
+.evo-trigger-text {
+  font-family: var(--font);
+  font-size: 4px;
+  color: var(--scr-dk);
+  opacity: .55;
+  text-align: center;
+  line-height: 1.4;
+  word-break: break-word;
+  text-transform: capitalize;
+  max-width: 38px;
+}
