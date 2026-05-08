@@ -342,7 +342,7 @@ function MiniCard({ selected, category, currentCategory, isFavorite, onFavorite 
         <div className="mini-name">{selected.name.toUpperCase()}</div>
       </div>
       <button className={`mini-fav ${isFavorite ? 'on' : ''}`} onClick={onFavorite}>
-        {isFavorite ? '❤' : '♡'}
+        {isFavorite ? "♥" : "♡" }
       </button>
     </div>
   )
