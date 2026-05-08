@@ -336,7 +336,7 @@ function FavButton({ isFavorite, onToggle }) {
       className={`fav-sc-btn ${isFavorite ? 'on' : ''}`}
       onClick={onToggle}
     >
-      {isFavorite ? '❤' : '♡'}
+      {isFavorite ? '♥' : '♡'}
     </button>
   )
 }
